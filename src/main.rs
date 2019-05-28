@@ -71,6 +71,8 @@ fn load_texture_from_memory(data: &[u8]) -> GLuint {
 
 pub struct Context {
     window: sdl2::video::Window,
+    gl_context: sdl2::video::GLContext,
+    dummy: &'static str,
 }
 
 pub struct Engine {
@@ -109,31 +111,35 @@ impl Engine {
 
         // TODO: create the shaders
 
-        let img_data = include_bytes!("../assets/wabbit_alpha.png");
-        let tex_id = load_texture_from_memory(img_data);
-
-        set_main_loop_callback(|| {
-            self.main_loop();
-        });
+        //let img_data = include_bytes!("../assets/wabbit_alpha.png");
+        //let tex_id = load_texture_from_memory(img_data);
 
         self.context = Some(Context {
             window: window,
+            gl_context: gl_context,
+            dummy: "test 123",
         });
+
     }
 
-    pub fn main_loop(&mut self) {
-        let context = &mut self.context;
-        match context {
-            Some(context) => {
-                unsafe {
-                    gl::ClearColor(191.0/255.0, 255.0/255.0, 255.0/255.0, 1.0);
-                    gl::Clear(gl::COLOR_BUFFER_BIT);
-                }
+}
 
-                context.window.gl_swap_window();
-            },
-            None => {}
+fn main_loop(mut engine: &mut Engine) {
+    //sdl2::log::log("Main loop");
+    let context = &mut engine.context;
+    match context {
+        Some(context) => {
+            unsafe {
+                gl::ClearColor(191.0/255.0, 255.0/255.0, 255.0/255.0, 1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT);
             }
+            
+            sdl2::log::log(context.dummy);
+            context.window.gl_swap_window();
+        },
+        None => {
+            sdl2::log::log("Missing context");
+        }
     }
 }
 
@@ -141,4 +147,8 @@ fn main() {
     println!("Startup");
     let mut engine = Engine::new();
     engine.setup();
+    set_main_loop_callback(|| {
+        main_loop(&mut engine);
+    });
+    stdweb::event_loop();
 }

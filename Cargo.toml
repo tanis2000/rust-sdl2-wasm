@@ -1,0 +1,19 @@
+[package]
+name = "rust-sdl2-wasm"
+version = "0.1.0"
+authors = ["Valerio Santinelli <santinelli@altralogica.it>"]
+edition = "2018"
+
+[dependencies]
+sdl2 = { path="../tanis2000-rust-sdl2", default-features = false, features = ["unsafe_textures"] }
+stdweb = "0.4.17"
+stb_image = "0.2.2"
+
+[build-dependencies]
+gl_generator = "0.5.3"
+cmake = "0.1.17"
+curl = "0.4.20"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"

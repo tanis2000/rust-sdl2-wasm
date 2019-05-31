@@ -5,7 +5,7 @@ authors = ["Valerio Santinelli <santinelli@altralogica.it>"]
 edition = "2018"
 
 [dependencies]
-sdl2 = { path="../tanis2000-rust-sdl2", default-features = false, features = ["unsafe_textures"] }
+sdl2 = { git="https://github.com/Rust-SDL2/rust-sdl2.git", branch="master", default-features = false, features = ["unsafe_textures"] }
 stdweb = "0.4.17"
 stb_image = "0.2.2"
 

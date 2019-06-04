@@ -1,6 +1,7 @@
 use std::os::raw::{c_int, c_void, c_uchar};
 use std::cell::RefCell;
 use std::ptr::null_mut;
+use std::mem;
 
 pub mod gl {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -19,23 +20,23 @@ extern "C" {
                                     simulate_infinite_loop: c_int);
 }
 
-thread_local!(static MAIN_LOOP_CALLBACK: RefCell<*mut c_void> = RefCell::new(null_mut()));
+thread_local!(static MAIN_LOOP_CALLBACK: RefCell<Option<Box<dyn FnMut()>>> = RefCell::new(None));
 
-pub fn set_main_loop_callback<F>(callback : F) where F : FnMut() {
+pub fn set_main_loop_callback<F: 'static>(callback : F) where F : FnMut() {
     MAIN_LOOP_CALLBACK.with(|log| {
-            *log.borrow_mut() = &callback as *const _ as *mut c_void;
-            });
+        *log.borrow_mut() = Some(Box::new(callback));
+    });
 
     unsafe { emscripten_set_main_loop(wrapper::<F>, 0, 1); }
 
-    unsafe extern "C" fn wrapper<F>() where F : FnMut() {
+    extern "C" fn wrapper<F>() where F : FnMut() {
         MAIN_LOOP_CALLBACK.with(|z| {
-            let closure = *z.borrow_mut() as *mut F;
-            (*closure)();
+            if let Some(ref mut callback) = *z.borrow_mut() {
+                callback();
+            }
         });
     }
 }
-
 fn main() {
     println!("Startup");
 
@@ -69,15 +70,14 @@ fn main() {
     let dummy = "test 123";
     println!("{}", dummy);
 
-    set_main_loop_callback(|| {
+    set_main_loop_callback(move || {
         unsafe {
             gl::ClearColor(191.0/255.0, 255.0/255.0, 255.0/255.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
-        println!("{}", dummy);
-        let mut something = vec![1; 1_000_000];
-        //sdl2::log::log(dummy);
-        //window.gl_swap_window();
+        //println!("{}", dummy);
+        sdl2::log::log(dummy);
+        window.gl_swap_window();
     });
 
 }
